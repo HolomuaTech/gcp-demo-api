@@ -1,47 +1,50 @@
+---                                # yamllint: disable-line rule:document-start
+# Trigger substitutions set in Cloud Build API / TF:
+#   _SERVICE        demo-api        # or demo-api
+#   _IMAGE_REPO     gcp-demo
+#   _REGION         us-west1
+
 steps:
-  # Install all dependencies, including devDependencies
-  - name: 'node:18'
-    entrypoint: 'npm'
-    args: ['ci']
-
-  # Run test coverage
-  - name: 'node:18'
-    entrypoint: 'npm'
-    args: [
-      'run', 'coverage'
-    ]
-
-  # Portage to build your image
-  - name: 'ghcr.io/easy-up/portage:v0.0.5'
+  # 1. Build the image
+  - name: gcr.io/cloud-builders/docker
     env:
-     - "PORTAGE_IMAGE_PUBLISH_ENABLED=1"
-    args: [
-      'run', 'all', '--config', '.portage.yml', '--tag', '${_IMAGE_NAME}'
-    ]
+      - DOCKER_BAPILDKIT=1
+    args:
+      - build
+      - -t
+      - ${_REGION}-docker.pkg.dev/$PROJECT_ID/${_IMAGE_REPO}/${_SERVICE}:${SHORT_SHA}
+      - .
 
-  # Deploy the application to Cloud Run
-  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
-    entrypoint: 'gcloud'
-    args: [
-      'run', 'deploy', '${_SERVICE_NAME}',
-      '--image', '${_IMAGE_NAME}',
-      '--region', '${_REGION}',
-      '--project', '${_PROJECT_ID}',
-      '--platform', 'managed',
-      '--allow-unauthenticated'
-    ]
+  # 2. Push the image
+  - name: gcr.io/cloud-builders/docker
+    args:
+      - push
+      - ${_REGION}-docker.pkg.dev/$PROJECT_ID/${_IMAGE_REPO}/${_SERVICE}:${SHORT_SHA}
 
-# Define default variables (will be overridden by trigger substitutions)
-substitutions:
-  _REGION: "us-west1"  # Default region
-  _PROJECT_ID: "holomua-demo"  # Default project
-  _SERVICE_NAME: "demo-api"  # Will be overridden by trigger (e.g., demo-api-dev)
-  _IMAGE_NAME: "us-west1-docker.pkg.dev/shared-resources-gcp/shared-container-registry/demo-api"  # Will be overridden by trigger
+  # 3. Reload cloud run
+  - name: gcr.io/google.com/cloudsdktool/cloud-sdk
+    entrypoint: gcloud
+    args:
+      - run
+      - deploy
+      - ${_SERVICE}
+      - --project
+      - $PROJECT_ID
+      - --region
+      - ${_REGION}
+      - --image
+      - ${_REGION}-docker.pkg.dev/$PROJECT_ID/${_IMAGE_REPO}/${_SERVICE}:${SHORT_SHA}
+      - --platform
+      - managed
+      - --allow-unauthenticated   # remove if the service is private
+      - --quiet
+
+# Tags that Cloud Build should push to Artifact Registry
+images:
+  - ${_REGION}-docker.pkg.dev/$PROJECT_ID/${_IMAGE_REPO}/${_SERVICE}:${SHORT_SHA}
 
 options:
+  substitutionOption: ALLOW_LOOSE
   logging: CLOUD_LOGGING_ONLY
 
-artifacts:
-  objects:
-    location: 'gs://gcp-demo-build-artifacts/gcp-demo-api/'
-    paths: ['artifacts/*.*']
+timeout: "900s"
