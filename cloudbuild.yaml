@@ -1,5 +1,5 @@
 steps:
-  # create the artifacts directory for portage and allow it to write to the directory
+  # create the artifacts directory for portage and allow it to write to the directory 
   - name: 'gcr.io/cloud-builders/docker'
     entrypoint: 'bash'
     args: ['-c', 'mkdir -p /workspace/artifacts && chmod 777 /workspace/artifacts | ls -la']
