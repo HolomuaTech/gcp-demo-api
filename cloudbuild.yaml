@@ -1,47 +1,67 @@
 steps:
-  # Install all dependencies, including devDependencies
-  - name: 'node:18'
-    entrypoint: 'npm'
-    args: ['ci']
+  # create the artifacts directory for portage and allow it to write to the directory
+  - name: 'gcr.io/cloud-builders/docker'
+    entrypoint: 'bash'
+    args: ['-c', 'mkdir -p /workspace/artifacts && chmod 777 /workspace/artifacts | ls -la']
+  
+  # Tell me about yourself cloud-builders/docker
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['context', 'ls']
 
-  # Run test coverage
-  - name: 'node:18'
-    entrypoint: 'npm'
-    args: [
-      'run', 'coverage'
-    ]
+  # Create a file with the secret for use in the next step
+  - name: 'gcr.io/cloud-builders/docker'
+    entrypoint: 'bash'
+    args:
+      - '-c'
+      - |
+        echo $$DEPLOY_API_WEBHOOK_AUTH_HEADER_SECRET > /workspace/auth_token.txt
+    secretEnv: ['DEPLOY_API_WEBHOOK_AUTH_HEADER_SECRET']
 
-  # Portage to build your image
-  - name: 'ghcr.io/easy-up/portage:v0.0.5'
-    env:
-     - "PORTAGE_IMAGE_PUBLISH_ENABLED=1"
-    args: [
-      'run', 'all', '--config', '.portage.yml', '--tag', '${_IMAGE_NAME}'
-    ]
+  # Cloudbuild checks out a commit behind the scenes resulting in a headless branch. We need to set the branch name to
+  # the provided substitution variable for portage to properly collect and send the build artifacts
+  - name: 'gcr.io/cloud-builders/git'
+    entrypoint: 'bash'
+    args:
+      - '-c'
+      - |
+        if [ ! -z "$BRANCH_NAME" ]; then
+          echo "Switching to branch $BRANCH_NAME"
+          git checkout -b "$BRANCH_NAME"
+        fi
 
-  # Deploy the application to Cloud Run
-  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
-    entrypoint: 'gcloud'
-    args: [
-      'run', 'deploy', '${_SERVICE_NAME}',
-      '--image', '${_IMAGE_NAME}',
-      '--region', '${_REGION}',
-      '--project', '${_PROJECT_ID}',
-      '--platform', 'managed',
-      '--allow-unauthenticated'
-    ]
+  # Build the container image with portage image, scan for vulnerabilities, and push artifacts to Belay
+  # The auth token is passed in as an environment variable via a file read due to running portage from docker
+  - name: 'gcr.io/cloud-builders/docker'
+    entrypoint: 'bash'
+    args:
+      - '-c'
+      - |
+        AUTH_TOKEN=$(cat /workspace/auth_token.txt) && \
+        docker run --user root \
+        -v /var/run/docker.sock:/var/run/docker.sock -v /workspace:/app:rw \
+        -e DEPLOY_API_WEBHOOK_AUTH_HEADER="$${AUTH_TOKEN}" \
+        --entrypoint sh ghcr.io/easy-up/portage:03b7d45d \
+        -c "echo \"Current User: $$(whoami)\" && \
+            echo \"Current Dir: $$(pwd)\" && \
+            echo \"Home Dir: $${HOME}\" && \
+            echo \"Current Branch: $$(git rev-parse --abbrev-ref HEAD)\" && \
+            docker info && \
+            git config --global --add safe.directory /app && \
+            portage run all -v"
+    secretEnv:
+      ['DEPLOY_API_WEBHOOK_AUTH_HEADER_SECRET']
 
-# Define default variables (will be overridden by trigger substitutions)
-substitutions:
-  _REGION: "us-west1"  # Default region
-  _PROJECT_ID: "holomua-demo"  # Default project
-  _SERVICE_NAME: "demo-api"  # Will be overridden by trigger (e.g., demo-api-dev)
-  _IMAGE_NAME: "us-west1-docker.pkg.dev/shared-resources-gcp/shared-container-registry/demo-api"  # Will be overridden by trigger
+  # Push the container image to Container Registry
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['push', 'us-west1-docker.pkg.dev/shared-resources-gcp/${_IMAGE_REPO}/${_SERVICE}:latest']
+
+images:
+  - 'us-west1-docker.pkg.dev/shared-resources-gcp/${_IMAGE_REPO}/${_SERVICE}'
+
+availableSecrets:
+  secretManager:
+    - versionName: projects/$PROJECT_ID/secrets/deploy-api-webhook-auth-header/versions/latest
+      env: 'DEPLOY_API_WEBHOOK_AUTH_HEADER_SECRET'
 
 options:
   logging: CLOUD_LOGGING_ONLY
-
-artifacts:
-  objects:
-    location: 'gs://gcp-demo-build-artifacts/gcp-demo-api/'
-    paths: ['artifacts/*.*']

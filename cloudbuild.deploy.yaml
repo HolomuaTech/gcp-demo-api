@@ -1,0 +1,21 @@
+steps:
+  # Deploy container image to Cloud Run
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+    entrypoint: gcloud
+    args:
+      - 'run'
+      - 'deploy'
+      - '${_SERVICE}'
+      - '--image'
+      - 'us-west1-docker.pkg.dev/shared-resources-gcp/${_IMAGE_REPO}/${_SERVICE}'
+      - '--region'
+      - '${_REGION}'
+      - '--platform'
+      - 'managed'
+      - '--allow-unauthenticated'
+      - '--set-env-vars'
+      - 'USE_ENV_LOCAL=false,USE_ENV_DOCKER=false,LOG_LEVEL=INFO,FRONTEND_URL=https://demo-dev.holomuatech.com,NODE_ENV=production,ALLOWED_ORIGINS=https://demo-dev.holomuatech.com'
+    timeout: 1200s
+
+options:
+  logging: CLOUD_LOGGING_ONLY

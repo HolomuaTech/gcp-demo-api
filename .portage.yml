@@ -1,7 +1,50 @@
-imageTag: supermongol/doe-demo-api
+# Base Configuration
+version: "1"
+imageTag: "us-west1-docker.pkg.dev/shared-resources-gcp/gcp-demo/demo-api:latest"
+artifactDir: "artifacts"
+gatecheckBundleFilename: "gatecheck-bundle.tar.gz"
+
+# Image Build Configuration
+imageBuild:
+  enabled: true
+  buildDir: "."
+  dockerfile: "Dockerfile"
+  platform: ""
+  target: ""
+  cacheTo: ""
+  cacheFrom: ""
+  squashLayers: false
+  args: {}
+
+# Image Scan Configuration
+imageScan:
+  enabled: true
+  syftFilename: "syft-sbom-report.json"
+  grypeConfigFilename: ""
+  grypeFilename: "grype-vulnerability-report-full.json"
+  clamavFilename: "clamav-virus-report.txt"
+
+# Code Scan Configuration
+codeScan:
+  enabled: true
+  gitleaksFilename: "gitleaks-secrets-report.json"
+  gitleaksSrcDir: "."
+  semgrepFilename: "semgrep-sast-report.json"
+  semgrepRules: "p/default"
+  semgrepExperimental: false
+  coverageFile: ""
+  semgrepSrcDir: "."
+
+# Image Publish Configuration
 imagePublish:
   enabled: false
-codeScan:
-  coverageFile: coverage/lcov.info
+  bundleTag: "us-west1-docker.pkg.dev/shared-resources-gcp/gcp-demo/demo-api/bundle:latest"
+
+# Deploy Configuration
 deploy:
-  gatecheckConfigFilename: .gatecheck.yml
+  enabled: true
+  gatecheckConfigFilename: ".custom-gatecheck.yml"
+  submit: true
+  successWebhooks:
+    - url: "https://belay-api.holomuatech.com/Build/SubmitArtifacts"
+      authorizationVar: "DEPLOY_API_WEBHOOK_AUTH_HEADER"
