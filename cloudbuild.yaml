@@ -1,5 +1,5 @@
 steps:
-  # create the artifacts directory for portage and allow it to write to the directory 
+  # create the artifacts directory for portage and allow it to write to the directory
   - name: 'gcr.io/cloud-builders/docker'
     entrypoint: 'bash'
     args: ['-c', 'mkdir -p /workspace/artifacts && chmod 777 /workspace/artifacts | ls -la']
@@ -51,16 +51,20 @@ steps:
     secretEnv:
       ['DEPLOY_API_WEBHOOK_AUTH_HEADER_SECRET']
 
+  # Tag the built image with the correct registry path
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['tag', '${_SERVICE}:latest', 'us-west1-docker.pkg.dev/holomua-demo/gcp-demo-registry/${_SERVICE}:latest']
+
   # Push the container image to Container Registry
   - name: 'gcr.io/cloud-builders/docker'
-    args: ['push', 'us-west1-docker.pkg.dev/shared-resources-gcp/${_IMAGE_REPO}/${_SERVICE}:latest']
+    args: ['push', 'us-west1-docker.pkg.dev/holomua-demo/gcp-demo-registry/${_SERVICE}:latest']
 
 images:
-  - 'us-west1-docker.pkg.dev/shared-resources-gcp/${_IMAGE_REPO}/${_SERVICE}'
+  - 'us-west1-docker.pkg.dev/holomua-demo/gcp-demo-registry/${_SERVICE}'
 
 availableSecrets:
   secretManager:
-    - versionName: projects/$PROJECT_ID/secrets/deploy-api-webhook-auth-header/versions/latest
+    - versionName: projects/$PROJECT_ID/secrets/gcp-demo-deploy-api-webhook-auth-header/versions/latest
       env: 'DEPLOY_API_WEBHOOK_AUTH_HEADER_SECRET'
 
 options:
