@@ -43,7 +43,7 @@ imagePublish:
 # Deploy Configuration
 deploy:
   enabled: true
-  gatecheckConfigFilename: ".custom-gatecheck.yml"
+  gatecheckConfigFilename: ".gatecheck.yml"
   submit: true
   successWebhooks:
     - url: "https://belay-api.holomuatech.com/Build/SubmitArtifacts"
