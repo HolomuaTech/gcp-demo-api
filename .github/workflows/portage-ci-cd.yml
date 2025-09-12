@@ -5,6 +5,8 @@ name: Test, Build, and Scan Container
 permissions:
   pull-requests: write
   checks: write
+  contents: read
+  packages: write
 
 on:
   push:
@@ -45,7 +47,10 @@ jobs:
     - name: Portage Build and Scan
       uses: easy-up/portage-cd-actions/image-build-scan-publish/docker@main
       with:
-        config_file: .portage.yml
+        config_file: .portage-github.yml
+        container_registry: ghcr.io
+        registry_user: ${{ github.actor }}
+        registry_token: ${{ secrets.GITHUB_TOKEN }}
         
     - name: Upload Artifacts
       uses: actions/upload-artifact@v4

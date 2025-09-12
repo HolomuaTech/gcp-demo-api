@@ -1,0 +1,48 @@
+# Base Configuration
+version: "1"
+imageTag: "ghcr.io/holomua-tech/gcp-demo-api:latest"
+artifactDir: "artifacts"
+gatecheckBundleFilename: "gatecheck-bundle.tar.gz"
+
+# Image Build Configuration
+imageBuild:
+  enabled: true
+  buildDir: "."
+  dockerfile: "Dockerfile"
+  platform: ""
+  target: ""
+  cacheTo: ""
+  cacheFrom: ""
+  squashLayers: false
+  args: {}
+
+# Image Scan Configuration
+imageScan:
+  enabled: true
+  syftFilename: "syft-sbom-report.json"
+  grypeConfigFilename: ""
+  grypeFilename: "grype-vulnerability-report-full.json"
+  clamavFilename: "clamav-virus-report.txt"
+
+# Code Scan Configuration
+codeScan:
+  enabled: true
+  gitleaksFilename: "gitleaks-secrets-report.json"
+  gitleaksSrcDir: "."
+  semgrepFilename: "semgrep-sast-report.json"
+  semgrepRules: "p/default"
+  semgrepExperimental: false
+  coverageFile: ""
+  semgrepSrcDir: "."
+
+# Image Publish Configuration
+imagePublish:
+  enabled: true
+  bundleTag: "ghcr.io/holomua-tech/gcp-demo-api/bundle:latest"
+
+# Deploy Configuration
+deploy:
+  enabled: false
+  gatecheckConfigFilename: ".gatecheck.yml"
+  submit: false
+  successWebhooks: []
