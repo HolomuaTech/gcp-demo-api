@@ -1,6 +1,6 @@
 # Base Configuration
 version: "1"
-imageTag: "us-west1-docker.pkg.dev/shared-resources-gcp/gcp-demo/demo-api:latest"
+imageTag: "us-west1-docker.pkg.dev/holomua-demo/gcp-demo-registry/gcp-demo-api:latest"
 artifactDir: "artifacts"
 gatecheckBundleFilename: "gatecheck-bundle.tar.gz"
 
@@ -38,7 +38,7 @@ codeScan:
 # Image Publish Configuration
 imagePublish:
   enabled: false
-  bundleTag: "us-west1-docker.pkg.dev/shared-resources-gcp/gcp-demo/demo-api/bundle:latest"
+  bundleTag: "us-west1-docker.pkg.dev/holomua-demo/gcp-demo-registry/gcp-demo-api/bundle:latest"
 
 # Deploy Configuration
 deploy:

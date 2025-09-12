@@ -51,6 +51,10 @@ steps:
     secretEnv:
       ['DEPLOY_API_WEBHOOK_AUTH_HEADER_SECRET']
 
+  # List available images to debug portage output
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['images']
+
   # Tag the built image with the correct registry path
   - name: 'gcr.io/cloud-builders/docker'
     args: ['tag', '${_SERVICE}:latest', 'us-west1-docker.pkg.dev/holomua-demo/gcp-demo-registry/${_SERVICE}:latest']
