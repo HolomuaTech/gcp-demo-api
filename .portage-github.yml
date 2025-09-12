@@ -1,6 +1,6 @@
 # Base Configuration
 version: "1"
-imageTag: "ghcr.io/holomua-tech/gcp-demo-api:latest"
+imageTag: "ghcr.io/HolomuaTech/gcp-demo-api:latest"
 artifactDir: "artifacts"
 gatecheckBundleFilename: "gatecheck-bundle.tar.gz"
 
@@ -38,7 +38,7 @@ codeScan:
 # Image Publish Configuration
 imagePublish:
   enabled: true
-  bundleTag: "ghcr.io/holomua-tech/gcp-demo-api/bundle:latest"
+  bundleTag: "ghcr.io/HolomuaTech/gcp-demo-api/bundle:latest"
 
 # Deploy Configuration
 deploy:
