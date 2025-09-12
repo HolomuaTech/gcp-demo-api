@@ -40,7 +40,7 @@ steps:
         docker run --user root \
         -v /var/run/docker.sock:/var/run/docker.sock -v /workspace:/app:rw \
         -e DEPLOY_API_WEBHOOK_AUTH_HEADER="$${AUTH_TOKEN}" \
-        --entrypoint sh ghcr.io/easy-up/portage:03b7d45d \
+        --entrypoint sh ghcr.io/easy-up/portage:d3c365f6 \
         -c "echo \"Current User: $$(whoami)\" && \
             echo \"Current Dir: $$(pwd)\" && \
             echo \"Home Dir: $${HOME}\" && \
