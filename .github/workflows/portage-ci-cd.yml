@@ -45,12 +45,33 @@ jobs:
         show_missing: true
 
     - name: Portage Build and Scan
+      id: portage
       uses: easy-up/portage-cd-actions/image-build-scan-publish/docker@main
       with:
         config_file: .portage-github.yml
         container_registry: ghcr.io
         registry_user: ${{ github.actor }}
         registry_token: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Generate Summary
+      run: |
+        echo "## 🚀 Build Summary" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "### 📦 Published Images" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "| Image | Registry | Tag |" >> $GITHUB_STEP_SUMMARY
+        echo "|-------|----------|-----|" >> $GITHUB_STEP_SUMMARY
+        echo "| gcp-demo-api | \`ghcr.io/holomuatech\` | \`latest\` |" >> $GITHUB_STEP_SUMMARY
+        echo "| gcp-demo-api/bundle | \`ghcr.io/holomuatech\` | \`latest\` |" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "### 🔗 View Images" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "- [Main Image](https://github.com/orgs/HolomuaTech/packages/container/package/gcp-demo-api)" >> $GITHUB_STEP_SUMMARY
+        echo "- [Bundle Image](https://github.com/orgs/HolomuaTech/packages/container/package/gcp-demo-api%2Fbundle)" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "### ✅ Status" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "Build completed successfully! 🎉" >> $GITHUB_STEP_SUMMARY
         
     - name: Upload Artifacts
       uses: actions/upload-artifact@v4
