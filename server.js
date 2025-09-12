@@ -23,6 +23,19 @@ const corsOptions = {
 app.use(cors(corsOptions));
 app.use(express.json());
 
+// Temporary middleware to log request headers for debugging
+app.use((req, res, next) => {
+  console.log(`Request Method: ${req.method}`);
+  console.log('Request Headers:', JSON.stringify(req.headers, null, 2));
+  if (req.method === 'OPTIONS') {
+    res.header('Access-Control-Allow-Origin', req.headers.origin);
+    res.header('Access-Control-Allow-Methods', 'GET,HEAD,PUT,PATCH,POST,DELETE');
+    res.header('Access-Control-Allow-Headers', 'Content-Type');
+    return res.sendStatus(204);
+  }
+  next();
+});
+
 app.get('/message', (req, res) => {
   try {
     const message = { message: "Welcome User" };
