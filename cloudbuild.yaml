@@ -40,13 +40,17 @@ steps:
         docker run --user root \
         -v /var/run/docker.sock:/var/run/docker.sock -v /workspace:/app:rw \
         -e DEPLOY_API_WEBHOOK_AUTH_HEADER="$${AUTH_TOKEN}" \
-        --entrypoint sh ghcr.io/easy-up/portage:8d42e081 \
+        -e PORTAGE_BUILD_GROUP_ID="gcp:$PROJECT_ID:$BUILD_ID" \
+        -e PORTAGE_IMAGE_NAME="us-west1-docker.pkg.dev/holomua-demo/gcp-demo-registry/${_SERVICE}" \
+        -e PORTAGE_BUILD_IMAGE_NAMES="us-west1-docker.pkg.dev/holomua-demo/gcp-demo-registry/${_SERVICE}" \
+        --entrypoint sh ghcr.io/easy-up/portage:belay-main-latest \
         -c "echo \"Current User: $$(whoami)\" && \
             echo \"Current Dir: $$(pwd)\" && \
             echo \"Home Dir: $${HOME}\" && \
             echo \"Current Branch: $$(git rev-parse --abbrev-ref HEAD)\" && \
             docker info && \
             git config --global --add safe.directory /app && \
+            printenv PORTAGE_BUILD_GROUP_ID PORTAGE_IMAGE_NAME PORTAGE_BUILD_IMAGE_NAMES && \
             portage run all -v"
     secretEnv:
       ['DEPLOY_API_WEBHOOK_AUTH_HEADER_SECRET']
