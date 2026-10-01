@@ -1,19 +1,26 @@
+gitleaks:
+  limitEnabled: true
+  limit: 0
 semgrep:
   severityLimit:
     error:
       enabled: true
-      # DEMO ONLY set 0 to trigger threshold error, 10 to pass
-      limit: 10
+      limit: 2
 grype:
   # Ignore vulnerabilities with very low Exploit Probability Scores
   epssRiskAcceptance:
     enabled: true
     score: 0.001
+  kevLimitEnabled: false
   severityLimit:
     critical:
-      enabled: false
+      enabled: true
+      limit: 292
     high:
-      enabled: false
+      enabled: true
+      limit: 1414
+cyclonedx:
+  kevLimitEnabled: false
 coverage:
   lineThreshold: 0.5
   functionThreshold: 0.5
