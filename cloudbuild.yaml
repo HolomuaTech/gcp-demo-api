@@ -29,35 +29,58 @@ steps:
           git checkout -b "$BRANCH_NAME"
         fi
 
-  # Build the container image with portage image, scan for vulnerabilities, and push artifacts to Belay
-  # The auth token is passed in as an environment variable via a file read due to running portage from docker
+  # Build the container image, run the code and image scans, and bundle the reports with portage.
+  # Deploy is disabled here so Belay is not notified until the image has been pushed (see the last step).
+  - name: 'gcr.io/cloud-builders/docker'
+    entrypoint: 'bash'
+    args:
+      - '-c'
+      - |
+        docker run --user root \
+        -v /var/run/docker.sock:/var/run/docker.sock -v /workspace:/app:rw \
+        -e PORTAGE_DEPLOY_ENABLED=false \
+        -e PORTAGE_BUILD_GROUP_ID="gcp:$PROJECT_ID:$BUILD_ID" \
+        -e PORTAGE_IMAGE_NAME="us-west1-docker.pkg.dev/holomua-demo/gcp-demo-registry/${_SERVICE}" \
+        -e PORTAGE_BUILD_IMAGE_NAMES="us-west1-docker.pkg.dev/holomua-demo/gcp-demo-registry/${_SERVICE}" \
+        --entrypoint sh ghcr.io/easy-up/portage:belay-main-latest \
+        -c "echo \"Current Branch: $$(git rev-parse --abbrev-ref HEAD)\" && \
+            git config --global --add safe.directory /app && \
+            printenv PORTAGE_BUILD_GROUP_ID PORTAGE_IMAGE_NAME PORTAGE_BUILD_IMAGE_NAMES && \
+            portage run all -v"
+
+  # Push the container image to Artifact Registry. This must finish before Belay is notified,
+  # because Belay triggers the deploy build as soon as it accepts the submission.
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['push', 'us-west1-docker.pkg.dev/holomua-demo/gcp-demo-registry/${_SERVICE}:latest']
+
+  # Confirm the pushed image, validate the bundle with gatecheck, and submit it to Belay.
+  # Runs only after the push above succeeds.
+  # - waitForImage polls the registry until the tag points at the image built in this run
+  #   (matched via the docker socket) and records its digest in the bundle sent to Belay.
+  # - Pushing used Cloud Build's own credentials. Portage only needs to READ the registry, so it
+  #   logs oras in with a short-lived token for the build's service account from the metadata
+  #   server (--network cloudbuild). No registry credentials are stored or passed in.
+  # - The Belay auth token is passed in as an environment variable via a file read due to running portage from docker
   - name: 'gcr.io/cloud-builders/docker'
     entrypoint: 'bash'
     args:
       - '-c'
       - |
         AUTH_TOKEN=$(cat /workspace/auth_token.txt) && \
-        docker run --user root \
+        docker run --user root --network cloudbuild \
         -v /var/run/docker.sock:/var/run/docker.sock -v /workspace:/app:rw \
         -e DEPLOY_API_WEBHOOK_AUTH_HEADER="$${AUTH_TOKEN}" \
+        -e PORTAGE_DEPLOY_WAIT_FOR_IMAGE=true \
         -e PORTAGE_BUILD_GROUP_ID="gcp:$PROJECT_ID:$BUILD_ID" \
         -e PORTAGE_IMAGE_NAME="us-west1-docker.pkg.dev/holomua-demo/gcp-demo-registry/${_SERVICE}" \
         -e PORTAGE_BUILD_IMAGE_NAMES="us-west1-docker.pkg.dev/holomua-demo/gcp-demo-registry/${_SERVICE}" \
         --entrypoint sh ghcr.io/easy-up/portage:belay-main-latest \
-        -c "echo \"Current User: $$(whoami)\" && \
-            echo \"Current Dir: $$(pwd)\" && \
-            echo \"Home Dir: $${HOME}\" && \
-            echo \"Current Branch: $$(git rev-parse --abbrev-ref HEAD)\" && \
-            docker info && \
+        -c 'wget -qO- --header "Metadata-Flavor: Google" \
+              http://metadata.google.internal/computeMetadata/v1/instance/service-accounts/default/token \
+              | sed -E "s/.*\"access_token\":\"([^\"]*)\".*/\1/" \
+              | oras login us-west1-docker.pkg.dev -u oauth2accesstoken --password-stdin && \
             git config --global --add safe.directory /app && \
-            printenv PORTAGE_BUILD_GROUP_ID PORTAGE_IMAGE_NAME PORTAGE_BUILD_IMAGE_NAMES && \
-            portage run all -v"
-    secretEnv:
-      ['DEPLOY_API_WEBHOOK_AUTH_HEADER_SECRET']
-
-  # Push the container image to Container Registry
-  - name: 'gcr.io/cloud-builders/docker'
-    args: ['push', 'us-west1-docker.pkg.dev/holomua-demo/gcp-demo-registry/${_SERVICE}:latest']
+            portage run deploy -v'
 
 images:
   - 'us-west1-docker.pkg.dev/holomua-demo/gcp-demo-registry/${_SERVICE}'
