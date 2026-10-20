@@ -1,20 +1,19 @@
 # Dockerfile
-FROM node:18
+# node:24-alpine keeps the runtime small: the full node image ships build tools
+# (imagemagick, curl dev headers, perl) that accounted for most critical CVEs.
+FROM node:24-alpine
 
 WORKDIR /usr/src/app
 
 COPY package*.json ./
 
-RUN npm install
+# Install only runtime dependencies from the lockfile
+RUN npm ci --omit=dev && npm cache clean --force
 
 COPY server.js .
 
+# Run as the unprivileged user provided by the node image
+USER node
+
 EXPOSE 8080
 CMD [ "node", "server.js" ]
-
-# build command: 
-#   docker build -t supermongol/hello-world-k8s-api .
-# push command: 
-#   docker push supermongol/hello-world-k8s-api
-# Run local: 
-#   docker run -p 8000:8000 supermongol/hello-world-k8s-api
