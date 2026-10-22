@@ -47,6 +47,9 @@ deploy:
   # Report mode: gatecheck still runs and prints its result, but the build is always submitted and Belay
   # makes the deploy decision (Belay's thresholds + approved POA&Ms). Belay also flags config drift.
   validation: report
+  # Validate against Belay's policy for this repo/branch (the local .gatecheck.yml is ignored when set).
+  # Uses the webhook's authorizationVar for the token. Regenerate the local file from Belay for local runs.
+  policyUrl: "https://belay-api.holomuatech.com/Policy/HolomuaTech/gcp-demo-api/gatecheck?branch=main"
   submit: true
   successWebhooks:
     - url: "https://belay-api.holomuatech.com/Build/SubmitArtifacts"
