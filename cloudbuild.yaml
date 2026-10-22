@@ -41,6 +41,7 @@ steps:
         -e PORTAGE_DEPLOY_ENABLED=false \
         -e PORTAGE_BUILD_GROUP_ID="gcp:$PROJECT_ID:$BUILD_ID" \
         -e PORTAGE_IMAGE_NAME="us-west1-docker.pkg.dev/holomua-demo/gcp-demo-registry/${_SERVICE}" \
+        -e PORTAGE_IMAGE_TAG="us-west1-docker.pkg.dev/holomua-demo/gcp-demo-registry/${_SERVICE}:latest" \
         -e PORTAGE_BUILD_IMAGE_NAMES="us-west1-docker.pkg.dev/holomua-demo/gcp-demo-registry/${_SERVICE}" \
         --entrypoint sh ghcr.io/easy-up/portage:belay-main-latest \
         -c "echo \"Current Branch: $$(git rev-parse --abbrev-ref HEAD)\" && \
@@ -73,6 +74,7 @@ steps:
         -e PORTAGE_DEPLOY_WAIT_FOR_IMAGE=true \
         -e PORTAGE_BUILD_GROUP_ID="gcp:$PROJECT_ID:$BUILD_ID" \
         -e PORTAGE_IMAGE_NAME="us-west1-docker.pkg.dev/holomua-demo/gcp-demo-registry/${_SERVICE}" \
+        -e PORTAGE_IMAGE_TAG="us-west1-docker.pkg.dev/holomua-demo/gcp-demo-registry/${_SERVICE}:latest" \
         -e PORTAGE_BUILD_IMAGE_NAMES="us-west1-docker.pkg.dev/holomua-demo/gcp-demo-registry/${_SERVICE}" \
         --entrypoint sh ghcr.io/easy-up/portage:belay-main-latest \
         -c 'wget -qO- --header "Metadata-Flavor: Google" \

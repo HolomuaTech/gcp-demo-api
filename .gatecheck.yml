@@ -22,6 +22,6 @@ grype:
 cyclonedx:
   kevLimitEnabled: false
 coverage:
-  lineThreshold: 0.5
-  functionThreshold: 0.5
-  branchThreshold: 0.5
+  lineThreshold: 0
+  functionThreshold: 0
+  branchThreshold: 0

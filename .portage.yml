@@ -44,6 +44,9 @@ imagePublish:
 deploy:
   enabled: true
   gatecheckConfigFilename: ".gatecheck.yml"
+  # Report mode: gatecheck still runs and prints its result, but the build is always submitted and Belay
+  # makes the deploy decision (Belay's thresholds + approved POA&Ms). Belay also flags config drift.
+  validation: report
   submit: true
   successWebhooks:
     - url: "https://belay-api.holomuatech.com/Build/SubmitArtifacts"
