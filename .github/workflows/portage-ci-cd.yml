@@ -46,7 +46,7 @@ jobs:
 
     - name: Portage Build and Scan
       id: portage
-      uses: easy-up/portage-cd-actions/image-build-scan-publish/docker@main
+      uses: easy-up/portage-cd-actions/image-build-scan-publish/docker@belay_main
       with:
         config_file: .portage-github.yml
         container_registry: ghcr.io

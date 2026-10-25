@@ -1,26 +1,49 @@
+# Generated from Belay policy for HolomuaTech/gcp-demo-api (global (no override for 'main')) at 2026-10-22 23:11 UTC; do not edit.
+# Regenerate: GET /Policy/HolomuaTech/gcp-demo-api/gatecheck?branch=main, or the Belay MCP tool get_security_thresholds.
+# These are Belay's limits for this repository/branch: regenerate the file when they change rather than editing it.
+# Belay also enforces (gatecheck cannot express it): an SBOM (CycloneDX) is required to deploy
+# Policy last changed 2026-10-22 by Relu808.
+
+version: "1"
 gitleaks:
   limitEnabled: true
-  limit: 0
+grype:
+  severityLimit:
+    critical:
+      enabled: true
+      limit: 0
+    high:
+      enabled: true
+      limit: 15
+    medium:
+      enabled: false
+      limit: 0
+    low:
+      enabled: false
+      limit: 0
+  epssLimit:
+    enabled: false
+    score: 0
+  epssRiskAcceptance:
+    enabled: true
+    score: 0.001
+  kevLimitEnabled: false
 semgrep:
   severityLimit:
     error:
       enabled: true
       limit: 2
-grype:
-  # Ignore vulnerabilities with very low Exploit Probability Scores
-  epssRiskAcceptance:
+    warning:
+      enabled: false
+      limit: 0
+    info:
+      enabled: false
+      limit: 0
+  impactRiskAcceptance:
     enabled: true
-    score: 0.001
-  kevLimitEnabled: false
-  severityLimit:
-    critical:
-      enabled: true
-      limit: 292
-    high:
-      enabled: true
-      limit: 1414
-cyclonedx:
-  kevLimitEnabled: false
+    high: false
+    medium: false
+    low: true
 coverage:
   lineThreshold: 0
   functionThreshold: 0
